@@ -10,7 +10,7 @@
 ## Установка и настройка
    1. Клонируйте репозиторий:
       ```
-      git clone 
+      git clone https://github.com/JustChelUser/TODO_BACKEND.git
       ```
    2. Сборка и запуск :
        ```
