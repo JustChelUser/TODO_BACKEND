@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNumber, isNumberString, IsOptional, IsString, Length } from "class-validator";
+import { IsNumber, isNumberString, IsOptional, IsPositive, IsString, Length } from "class-validator";
 
 export class createListDto {
 
@@ -9,10 +9,11 @@ export class createListDto {
     readonly name: string;
 
     @ApiProperty({ example: 1, description: 'Позиция списка среди других списков задач' })
-    @IsOptional() @IsNumber({}, { message: 'Должно быть числом' })
+    @IsOptional() @IsPositive({ message: 'Должно быть больше 0' }) @IsNumber({}, { message: 'Должно быть числом' })
     position?: number;
 
     @ApiProperty({ example: 1, description: 'Номер проекта в котором будет находиться список' })
-    @IsNumber({}, { message: 'Должно быть числом' })
+    @IsPositive({ message: 'Должно быть больше 0' }) @IsNumber({}, { message: 'Должно быть числом' })
     readonly projectId: number;
+
 }

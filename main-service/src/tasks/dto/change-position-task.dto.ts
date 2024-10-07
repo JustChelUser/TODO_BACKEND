@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsNumber, IsOptional} from "class-validator";
+import { IsNumber, IsOptional, IsPositive} from "class-validator";
 
 export class changePositionTaskDto {
     @ApiProperty({ example: 1, description: 'Позиция задачи в списке задач' })
@@ -7,6 +7,6 @@ export class changePositionTaskDto {
     position: number;
 
     @ApiProperty({ example: 1, description: 'Номер списка задач в котором будет находиться задача' })
-    @IsNumber({}, { message: 'Должно быть числом' })
+    @IsPositive({ message: 'Должно быть больше 0' }) @IsNumber({}, { message: 'Должно быть числом' })
     readonly listId: number;
 }
