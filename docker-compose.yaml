@@ -1,0 +1,105 @@
+networks:
+  main:
+services:
+  auth-service:
+    build:
+      context: ./auth-service
+    container_name: auth-service
+    env_file:
+      - ./auth-service/.env
+    networks:
+      - main
+    depends_on:
+       - AuthDb
+       - rabbitmq
+       - nginx
+  main-service:
+    build:
+      context: ./main-service
+    container_name: main-service
+    env_file:
+      - ./main-service/.env
+    networks:
+      - main
+    depends_on:
+      - MainDb
+      - rabbitmq
+      - nginx
+  rabbitmq:
+    image: rabbitmq:3-management
+    hostname: ${RABBITMQ_HOST_NAME}
+    container_name: ${RABBITMQ_CONTAINER_NAME}
+    restart: always
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_USER}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASS}
+      - RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS=-rabbit disk_free_limit 1073741824
+    volumes:
+      - rabbitmqData:/var/lib/rabbitmq
+    ports:
+      - ${RABBITMQ_PORT1}
+      - ${RABBITMQ_PORT2}
+    networks:
+      - main
+  pgadmin:
+    container_name: ${PGADMIN_CONTAINER_NAME}
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_PASSWORD}
+    volumes:
+      - PgAdminData:/var/lib/PgAdmin
+    ports:
+      - ${PGADMIN_PORT}
+    networks:
+      - main
+  AuthDb:
+    image: postgres
+    restart: always
+    container_name: ${POSTGRES_CONTAINER_NAME_AUTH}
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER_AUTH}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_AUTH}
+      POSTGRES_DB: ${POSTGRES_DB_AUTH}
+    volumes:
+      - pgAuthData:/var/lib/postgresql/data
+    networks:
+      - main
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER_AUTH} -d ${POSTGRES_DB_AUTH} -h AuthDb"]
+      interval: 5s
+      retries: 5
+      timeout: 5s
+  MainDb:
+    image: postgres
+    restart: always
+    container_name: ${POSTGRES_CONTAINER_NAME_MAIN}
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER_MAIN}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD_MAIN}
+      POSTGRES_DB: ${POSTGRES_DB_MAIN}
+    volumes:
+      - pgMainData:/var/lib/postgresql/data
+    networks:
+      - main
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER_MAIN} -d ${POSTGRES_DB_MAIN} -h MainDb"]
+      interval: 5s
+      retries: 5
+      timeout: 5s
+  nginx:
+    image: nginx
+    restart: always
+    container_name: ${NGINX_CONTAINER_NAME}
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+    ports:
+      - ${NGINX_PORT}
+    networks:
+      - main
+volumes:
+  rabbitmqData:
+  PgAdminData:
+  pgAuthData:
+  pgMainData:
