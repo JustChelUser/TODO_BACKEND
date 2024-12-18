@@ -3,6 +3,9 @@
 */node_modules/
 */build/
 
+# compiled output
+.env
+
 # Logs
 logs
 *.log
