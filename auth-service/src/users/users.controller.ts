@@ -1,11 +1,11 @@
-import { Body, Controller, Delete, Get, Inject, Injectable, Param, Post, Put, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, Get, Injectable, Param, Post, Put, Req, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { JwtAuthGuard } from "src/auth/jwt-auth.guard";
 import { UsersService } from "./users.service";
 import { User } from "./users.entity";
 import { createUserDto } from "./dto/create-user.dto";
 import { updateUserDto } from "./dto/update-user.dto";
 import { MessagePattern, Payload, RpcException } from "@nestjs/microservices";
+import { JwtAuthGuard } from "src/auth/guards/jwt-auth.guard";
 
 Injectable()
 @ApiTags('Пользователи')
@@ -23,7 +23,7 @@ export class UsersController {
         return this.userService.createUserManualy(userDto, req);
     }
 
-    @ApiOperation({ summary: 'Получить всех польователей' })
+    @ApiOperation({ summary: 'Получить всех пользователей' })
     @ApiResponse({ status: 200, type: [User] })
     @ApiBearerAuth()
     @Get()

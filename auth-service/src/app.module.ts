@@ -1,29 +1,32 @@
 import { Module } from "@nestjs/common";
-import { ConfigModule } from "@nestjs/config";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { User } from "./users/users.entity";
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from "./users/users.module";
 import { ClientsModule, Transport } from "@nestjs/microservices";
 
-
 @Module({
     controllers: [],
     providers: [],
     imports: [
         ConfigModule.forRoot({
-            envFilePath: `.env`
+            isGlobal: true,
         }),
-        TypeOrmModule.forRoot({
-          type: 'postgres',
-          host: process.env.POSTGRES_HOST,
-          port: Number(process.env.POSTGRES_PORT),
-          username: process.env.POSTGRES_USER,
-          password: process.env.POSTGRES_PASSWORD,
-          database: process.env.POSTGRES_DB,
-          entities: [User],
-          synchronize: true,
-          autoLoadEntities:true
+        TypeOrmModule.forRootAsync({
+          imports:[ConfigModule],
+          useFactory:(configService: ConfigService)=>({
+            type: 'postgres',
+            host: configService.get('POSTGRES_HOST'),
+            port: Number(configService.get('POSTGRES_PORT')),
+            username: configService.get('POSTGRES_USER'),
+            password: configService.get('POSTGRES_PASSWORD'),
+            database: configService.get('POSTGRES_DB'),
+            entities: [__dirname+'/**/*.entity{.js, .ts}'],
+            synchronize: true,
+            autoLoadEntities:true
+          }),
+          inject:[ConfigService],
         }),
         UsersModule,
         AuthModule,

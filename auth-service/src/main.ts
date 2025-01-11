@@ -27,6 +27,6 @@ async function start() {
     SwaggerModule.setup('/api/docs',app,Document);
     app.useGlobalPipes(new ValidationPipe)
     await app.startAllMicroservices();
-    await app.listen(PORT,()=>console.log(`Servert started on port ${PORT}`));
+    await app.listen(PORT,()=>console.log(`Server started on port ${PORT}`));
 }
 start();

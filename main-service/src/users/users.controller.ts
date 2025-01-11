@@ -7,10 +7,10 @@ Injectable()
 export class UsersController {
 
     constructor(private userService: UsersService) { }
-    @EventPattern('removeUserObjets')
+    @EventPattern('removeUserObjects')
     async removeUserObjects(@Payload() userId: number, @Ctx() context: RmqContext) {
         try {
-            await this.userService.removeUserObjets(userId);
+            await this.userService.removeUserObjects(userId);
         }
         catch (error) {
             console.error('Ошибка при удалении объектов пользователя:', error);

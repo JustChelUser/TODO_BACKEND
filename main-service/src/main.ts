@@ -20,7 +20,7 @@ async function start() {
         }
     },);
     const config = new DocumentBuilder()
-        .setTitle('Микросесрвис основной логики to-do листа')
+        .setTitle('Микросервис основной логики to-do листа')
         .setDescription('Документация REST API')
         .setVersion('1.0.0')
         .addBearerAuth()

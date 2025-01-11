@@ -1,7 +1,8 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { createUserDto } from 'src/users/dto/create-user.dto';
+import { LocalAuthGuard } from './guards/local-auth.guard';
 
 @ApiTags('Авторизация')
 @Controller('auth')
@@ -11,6 +12,7 @@ export class AuthController {
 
     @ApiOperation({ summary: 'Авторизация' })
     @ApiResponse({ status: 200, type: String })
+    @UseGuards(LocalAuthGuard)
     @Post('/login')
     login(@Body() userDto: createUserDto) {
         return this.authService.login(userDto);
