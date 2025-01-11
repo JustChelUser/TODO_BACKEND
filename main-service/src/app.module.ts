@@ -1,12 +1,9 @@
 import { Module } from "@nestjs/common";
-import { ConfigModule} from "@nestjs/config";
+import { ConfigModule, ConfigService} from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { Project } from "./projects/projects.entity";
-import { List } from "./lists/lists.entity";
 import { ListsModule } from "./lists/lists.module";
 import { TasksModule } from "./tasks/tasks.module";
 import { ProjectsModule } from "./projects/projects.module";
-import { Task } from "./tasks/tasks.entity";
 import { ClientsModule, Transport } from "@nestjs/microservices";
 import { AuthModule } from "./auth/auth.module";
 import { UsersModule } from "./users/users.module";
@@ -17,19 +14,23 @@ import { UsersModule } from "./users/users.module";
   providers: [],
   imports: [
     ConfigModule.forRoot({
-      envFilePath: `.env`
-    }),
-    TypeOrmModule.forRoot({
+      isGlobal: true,
+  }),
+  TypeOrmModule.forRootAsync({
+    imports:[ConfigModule],
+    useFactory:(configService: ConfigService)=>({
       type: 'postgres',
-      host: process.env.POSTGRES_HOST,
-      port: Number(process.env.POSTGRES_PORT),
-      username: process.env.POSTGRES_USER,
-      password: process.env.POSTGRES_PASSWORD,
-      database: process.env.POSTGRES_DB,
-      entities: [Project, List, Task],
+      host: configService.get('POSTGRES_HOST'),
+      port: Number(configService.get('POSTGRES_PORT')),
+      username: configService.get('POSTGRES_USER'),
+      password: configService.get('POSTGRES_PASSWORD'),
+      database: configService.get('POSTGRES_DB'),
+      entities: [__dirname+'/**/*.entity{.js, .ts}'],
       synchronize: true,
-      autoLoadEntities: true
+      autoLoadEntities:true
     }),
+    inject:[ConfigService],
+  }),
     ProjectsModule,
     ListsModule,
     TasksModule,

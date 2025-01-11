@@ -157,7 +157,7 @@ export class UsersService {
     }
     async removeUserObjects(id: number) {
         try {
-            this.clientUser.emit('removeUserObjets', id);
+            this.clientUser.emit('removeUserObjects', id);
         } catch (error) {
             console.error('Ошибка при отправке сообщения о необходимости удаления объектов пользователя:', error);
         }

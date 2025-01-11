@@ -5,7 +5,6 @@ import { Project } from "src/projects/projects.entity";
 import { List } from "./lists.entity";
 import { ListsController } from "./lists.controller";
 import { ClientsModule, Transport } from "@nestjs/microservices";
-import { UsersService } from "src/users/users.service";
 import { UsersModule } from "src/users/users.module";
 import { AuthModule } from "src/auth/auth.module";
 

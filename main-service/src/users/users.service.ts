@@ -21,7 +21,7 @@ export class UsersService {
             console.error('Ошибка при получении пользователя по email:', error);
         }
     }
-    async removeUserObjets(userId: number) {
+    async removeUserObjects(userId: number) {
         try {
             const changes = await this.projectRepository.delete({
                 userId: userId
