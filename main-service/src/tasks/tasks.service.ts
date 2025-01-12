@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Inject, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Task } from "./tasks.entity";
 import { In, Repository } from "typeorm";
@@ -8,6 +8,9 @@ import { updateTaskDto } from "./dto/update-task.dto";
 import { changePositionTaskDto } from "./dto/change-position-task.dto";
 import { UsersService } from "src/users/users.service";
 import { Project } from "src/projects/projects.entity";
+import { Cache } from "cache-manager";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+
 
 @Injectable()
 export class TasksService {
@@ -18,7 +21,9 @@ export class TasksService {
         private listRepository: Repository<List>,
         @InjectRepository(Project)
         private projectRepository: Repository<Project>,
-        private userService: UsersService
+        private userService: UsersService,
+        @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
+        
     ) { }
     async createTask(dto: createTaskDto, req) {
         try {
@@ -39,6 +44,7 @@ export class TasksService {
                 dto.position = countTasks + 1;
                 const task = this.taskRepository.create({ ...dto, list });
                 await this.taskRepository.save(task);
+                await this.cacheManager.del(user.id);
                 return task;
             }
             else {
@@ -128,6 +134,7 @@ export class TasksService {
             if (task) {
                 this.taskRepository.merge(task, updateData);
                 await this.taskRepository.save(task);
+                await this.cacheManager.del(user.id);
                 return task;
             }
             else {
@@ -170,9 +177,11 @@ export class TasksService {
                     where: { list: { id: newListId } }
                 });
                 if (originalListId === newListId) {
+                    await this.cacheManager.del(user.id);
                     return this.PositionInSameList(task, updateData, newListId, countTasks);
                 }
                 else {
+                    await this.cacheManager.del(user.id);
                     //если пользователь поменял лист на другой
                     return this.PositionInOtherList(task, updateData, newListId, countTasks);
                 }
@@ -301,6 +310,7 @@ export class TasksService {
                         });
                     }
                     await this.taskRepository.save(tasks);
+                    await this.cacheManager.del(user.id);
                     return { message: "Задача удалёна" }
                 }
             }

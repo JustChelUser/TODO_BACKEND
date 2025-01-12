@@ -27,7 +27,7 @@ import { UsersModule } from "./users/users.module";
       database: configService.get('POSTGRES_DB'),
       entities: [__dirname+'/**/*.entity{.js, .ts}'],
       synchronize: true,
-      autoLoadEntities:true
+      autoLoadEntities:true,
     }),
     inject:[ConfigService],
   }),

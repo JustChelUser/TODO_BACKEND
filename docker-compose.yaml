@@ -98,8 +98,19 @@ services:
       - ${NGINX_PORT}
     networks:
       - main
+  Redis:
+    container_name: ${REDIS_CONTAINER_NAME}
+    image: redis
+    restart: always
+    volumes:
+      - RedisData:/var/lib/Redis
+    ports:
+      - ${REDIS_PORT}
+    networks:
+      - main
 volumes:
   rabbitmqData:
   PgAdminData:
   pgAuthData:
   pgMainData:
+  RedisData:

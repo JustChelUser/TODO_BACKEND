@@ -8,11 +8,19 @@ import { TasksController } from "./tasks.controller";
 import { AuthModule } from "src/auth/auth.module";
 import { UsersModule } from "src/users/users.module";
 import { ClientsModule, Transport } from "@nestjs/microservices";
+import { CacheModule } from "@nestjs/cache-manager";
+import * as redisStore from "cache-manager-redis-store"
 
 @Module({
     controllers: [TasksController],
     providers: [TasksService],
-    imports: [TypeOrmModule.forFeature([Project, List, Task]),
+    imports: [
+        CacheModule.register({
+            store: redisStore,
+            host: process.env.REDIS_CONTAINER_NAME,
+            port: Number(process.env.REDIS_PORT),
+          }),
+        TypeOrmModule.forFeature([Project, List, Task]),
         AuthModule,
         UsersModule,
     ClientsModule.register([
