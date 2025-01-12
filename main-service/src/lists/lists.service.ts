@@ -1,4 +1,4 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { HttpException, HttpStatus, Inject, Injectable } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { List } from "./lists.entity";
 import { In, Repository } from "typeorm";
@@ -7,6 +7,9 @@ import { Project } from "src/projects/projects.entity";
 import { updateListDto } from "./dto/update-list.dto";
 import { ChangePositionListDto } from "./dto/change-position-list.dto";
 import { UsersService } from "src/users/users.service";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { Cache } from "cache-manager";
+
 
 @Injectable()
 export class ListsService {
@@ -15,7 +18,9 @@ export class ListsService {
         private listRepository: Repository<List>,
         @InjectRepository(Project)
         private projectRepository: Repository<Project>,
-        private userService: UsersService
+        private userService: UsersService,
+        @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
+        
     ) { }
     async createList(dto: createListDto, req) {
         try {
@@ -28,6 +33,7 @@ export class ListsService {
                 where: { userId: user.id, id: dto.projectId },
             });
             if (project) {
+                await this.cacheManager.del(user.id);
                 const countLists = await this.listRepository.count({
                     where: { project: { id: project.id } }
                 });
@@ -115,6 +121,7 @@ export class ListsService {
             const projectIds = projects.map(project => project.id);
             const list = await this.listRepository.findOne({ where: { project: In(projectIds), id }, relations: ['tasks'] });
             if (list) {
+                await this.cacheManager.del(user.id);
                 this.listRepository.merge(list, updateData);
                 await this.listRepository.save(list);
                 return list;
@@ -169,6 +176,7 @@ export class ListsService {
                         list.position = newPosition;
                         await this.listRepository.save([...lists, list]);
                     }
+                    await this.cacheManager.del(user.id);
                     return list;
                 } else {
                     throw new HttpException(`Новая позиция не может быть больше общего количества списков на данный момент. Всего списков ${countLists}. Запрашиваемая позиция ${updateData.position}`, HttpStatus.NOT_FOUND);
@@ -214,6 +222,7 @@ export class ListsService {
                         });
                     }
                     await this.listRepository.save(lists);
+                    await this.cacheManager.del(user.id);
                     return { message: "Список задач удалён" }
                 }
             }

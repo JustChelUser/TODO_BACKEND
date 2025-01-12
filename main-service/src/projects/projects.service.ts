@@ -4,15 +4,20 @@ import { Project } from "./projects.entity";
 import { Repository } from "typeorm";
 import { createProjectDto } from "./dto/create-project.dto";
 import { UsersService } from "src/users/users.service";
+import { CACHE_MANAGER } from "@nestjs/cache-manager";
+import { Cache } from "cache-manager";
+
+
 
 @Injectable()
 export class ProjectsService {
     constructor(
         @InjectRepository(Project)
         private projectRepository: Repository<Project>,
-        private userService: UsersService
-
+        private userService: UsersService,
+        @Inject(CACHE_MANAGER) private readonly cacheManager: Cache
     ) { }
+
     async createProject(dto: createProjectDto, req) {
         try {
             const email = req.user.email;
@@ -20,6 +25,7 @@ export class ProjectsService {
             if (!user) {
                 throw new HttpException('Пользователь с таким email не найден', HttpStatus.NOT_FOUND);
             }
+            await this.cacheManager.del(user.id);
             const project = this.projectRepository.create({ ...dto, userId: user.id });
             await this.projectRepository.save(project);
             return project;
@@ -41,9 +47,18 @@ export class ProjectsService {
             if (!user) {
                 throw new HttpException('Пользователь с таким email не найден', HttpStatus.NOT_FOUND);
             }
+            const redisProjects = await this.cacheManager.get(user.id) as string;
+            if (redisProjects) {
+                console.log('Projects loaded from cache for user id:' + user.id);
+                return JSON.parse(redisProjects);
+            }
             const projects = await this.projectRepository.find({
                 where: { userId: user.id, }, relations: ['lists', 'lists.tasks'],
             });
+            if (projects && projects.length>0) {
+                await this.cacheManager.set(user.id, JSON.stringify(projects), { ttl: 600 });
+                console.log('Projects added in cache for user id:' + user.id);
+            }
             return projects;
         } catch (error) {
             console.error('Не удалось получить проекты:', error.message);
@@ -62,6 +77,14 @@ export class ProjectsService {
             let user = await this.userService.getUserByEmail(email);
             if (!user) {
                 throw new HttpException('Пользователь с таким email не найден', HttpStatus.NOT_FOUND);
+            }
+            const redisProjects = await this.cacheManager.get(user.id) as string;
+            if (redisProjects) {
+                const project = JSON.parse(redisProjects).find(project => project.id == id);
+                if (project) {
+                    console.log('Project loaded from cache for user id:' + user.id);
+                    return project;
+                }
             }
             const project = await this.projectRepository.findOne({
                 where: { userId: user.id, id }, relations: ['lists', 'lists.tasks']
@@ -89,6 +112,7 @@ export class ProjectsService {
             if (!user) {
                 throw new HttpException('Пользователь с таким email не найден', HttpStatus.NOT_FOUND);
             }
+            await this.cacheManager.del(user.id);
             const project = await this.projectRepository.findOne({
                 where: { userId: user.id, id },
             });
@@ -117,6 +141,7 @@ export class ProjectsService {
             if (!user) {
                 throw new HttpException('Пользователь с таким email не найден', HttpStatus.NOT_FOUND);
             }
+            await this.cacheManager.del(user.id);
             const changes = await this.projectRepository.delete({
                 userId: user.id, id
             });

@@ -7,11 +7,19 @@ import { ListsController } from "./lists.controller";
 import { ClientsModule, Transport } from "@nestjs/microservices";
 import { UsersModule } from "src/users/users.module";
 import { AuthModule } from "src/auth/auth.module";
+import { CacheModule } from "@nestjs/cache-manager";
+import * as redisStore from "cache-manager-redis-store"
+
 
 @Module({
   controllers: [ListsController],
   providers: [ListsService],
   imports: [
+    CacheModule.register({
+      store: redisStore,
+      host: process.env.REDIS_CONTAINER_NAME,
+      port: Number(process.env.REDIS_PORT),
+    }),
     TypeOrmModule.forFeature([Project, List]), 
     AuthModule, 
     UsersModule,
